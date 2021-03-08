@@ -1,10 +1,14 @@
 import cv2
+from datetime import datetime
 
 first_frame = None
 video = cv2.VideoCapture(0)
+status_list = [None]
+times = []
 
 while True:
     check, frame = video.read()
+    status = 0
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (21,21),0)
 
@@ -21,18 +25,29 @@ while True:
     for contour in cntrs:
         if cv2.contourArea(contour) < 1000:
             continue
+
+        status = 1
+
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 3)
 
+    #store time of motion entering & exiting frame
+    status_list.append(status)
+    if status_list[-1]==1 and status_list[-2]==0:
+        times.append(datetime.now())
+    if status_list[-1]==0 and status_list[-2]==1:
+        times.append(datetime.now())
 
     cv2.imshow("Capturing", gray)
     cv2.imshow("Delta", delta_frame)
     cv2.imshow("Threshold", thresh_frame)
     cv2.imshow("Colour Frame", frame)
 
-    key = cv2.waitKey(1000)
+    key = cv2.waitKey(100)
     if key == ord('q'):
         break
+
+    print(status_list)
 
 video.release()
 cv2.destroyAllWindows()
