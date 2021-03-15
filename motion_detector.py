@@ -1,11 +1,14 @@
 import cv2, pandas
 from datetime import datetime
+from face_detection import detect_face
 
 first_frame = None
 video = cv2.VideoCapture(0)
 status_list = [None]
 times = []
 motion_df = pandas.DataFrame(columns=["Start", "End"])
+count = 0
+face_status = False
 
 while True:
     check, frame = video.read()
@@ -30,7 +33,7 @@ while True:
         status = 1
 
         (x, y, w, h) = cv2.boundingRect(contour)
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 3)
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,255), 3)
 
     #store time of motion entering & exiting frame
     status_list.append(status)
@@ -41,6 +44,16 @@ while True:
     if status_list[-1]==0 and status_list[-2]==1:
         times.append(datetime.now())
 
+    #check if face is detected in motion & save to imgs folder
+    if detect_face(frame):
+        if face_status == False:
+            count+=1
+            cv2.imwrite(filename='./imgs/saved_img'+str(count)+'.jpg', img=frame)
+            face_status = True
+    else:
+        face_status = False
+
+
     cv2.imshow("Capturing", gray)
     cv2.imshow("Delta", delta_frame)
     cv2.imshow("Threshold", thresh_frame)
@@ -49,7 +62,7 @@ while True:
     key = cv2.waitKey(100)
     if key == ord('q'):
         if status == 1:
-            time.append(datetime.now())
+            times.append(datetime.now())
         break
 
     print(status_list)
