@@ -1,4 +1,4 @@
-import cv2
+import cv2, time
 
 def detect_face(img):
     face_cascade = cv2.CascadeClassifier("./haarcascade_frontalface_default.xml")
@@ -9,6 +9,7 @@ def detect_face(img):
 
     for (x, y, w, h) in face_coords:
         img = cv2.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 3)
+        time.sleep(1)
         return True
 
     return None
