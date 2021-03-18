@@ -3,16 +3,19 @@ from datetime import datetime
 from face_detection import detect_face
 
 first_frame = None
-video = cv2.VideoCapture(0)
 status_list = [None]
-times = []
-motion_df = pandas.DataFrame(columns=["Start", "End"])
-count = 0
+motion_times = []
+face_times = []
 face_status = False
+motion_df = pandas.DataFrame(columns=["Start", "End"])
+face_df = pandas.DataFrame(columns=["Start", "End"])
+count = 0
+
+video = cv2.VideoCapture(0)
 
 while True:
     check, frame = video.read()
-    status = 0
+    motion_status = 0
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (21,21),0)
 
@@ -27,32 +30,35 @@ while True:
     (cntrs,_) = cv2.findContours(thresh_frame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in cntrs:
-        if cv2.contourArea(contour) < 1000:
+        if cv2.contourArea(contour) < 10000:
             continue
 
-        status = 1
+        motion_status = 1
 
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,255), 3)
 
     #store time of motion entering & exiting frame
-    status_list.append(status)
+    status_list.append(motion_status)
     status_list = status_list[-2:]
 
-    if status_list[-1]==1 and status_list[-2]==0:
-        times.append(datetime.now())
-    if status_list[-1]==0 and status_list[-2]==1:
-        times.append(datetime.now())
-
-    #check if face is detected in motion & save to imgs folder
+    #check if face is detected in motion
     if detect_face(frame):
         if face_status == False:
             count+=1
+            face_times.append(datetime.now())
             cv2.imwrite(filename='./imgs/saved_img'+str(count)+'.jpg', img=frame)
             face_status = True
     else:
+        if face_status == True:
+            face_times.append(datetime.now())
         face_status = False
 
+
+    if status_list[-1]==1 and status_list[-2]==0:
+        motion_times.append(datetime.now())
+    if status_list[-1]==0 and status_list[-2]==1:
+        motion_times.append(datetime.now())
 
     cv2.imshow("Capturing", gray)
     cv2.imshow("Delta", delta_frame)
@@ -61,15 +67,21 @@ while True:
 
     key = cv2.waitKey(100)
     if key == ord('q'):
-        if status == 1:
-            times.append(datetime.now())
+        if motion_status == 1:
+            motion_times.append(datetime.now())
+        if face_status == True:
+            face_times.append(datetime.now())
         break
 
-    print(status_list)
+    print(face_times)
 
-for i in range(0,len(times),2):
-    motion_df = motion_df.append({"Start": times[i], "End":times[i+1]}, ignore_index=True)
+for i in range(0,len(motion_times),2):
+    motion_df = motion_df.append({"Start": motion_times[i], "End":motion_times[i+1]}, ignore_index=True)
+
+for i in range(0, len(face_times), 2):
+    face_df = face_df.append({"Start": face_times[i], "End":face_times[i+1]}, ignore_index=True)
 
 motion_df.to_csv("times.csv")
+face_df.to_csv("face.csv")
 video.release()
 cv2.destroyAllWindows()
