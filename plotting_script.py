@@ -15,10 +15,17 @@ if (len(motion_df) > 0):
     q1 = p.quad(left='Start',right='End',bottom=0,top=1,color="yellow",source=cds)
 
 if (len(face_df) > 0):
-    face_df['Start_Str'] = face_df['Start'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    face_df['End_Str'] = face_df['End'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    cds_f = ColumnDataSource(face_df)
-    hover_face = HoverTool(tooltips=[("Start", "@Start_Str"), ("End", "@End_Str")])
+    cds_f = ColumnDataSource(data=dict(
+    Start=face_df['Start'],
+    End=face_df['End'],
+    Start_Str=face_df['Start'].dt.strftime('%Y-%m-%d %H:%M:%S'),
+    End_Str=face_df['End'].dt.strftime('%Y-%m-%d %H:%M:%S'),
+    imgs= [
+        './imgs/1592171906394.jpg'
+    ]
+    ))
+    hover_face = HoverTool(tooltips=[("Start", "@Start_Str"), ("End", "@End_Str"),
+                                    ("Image", "<div><img src='@imgs', height=100, width=100></div>")])
     p.add_tools(hover_face)
     q2 = p.quad(left='Start',right='End',bottom=1,top=2,color="green",source=cds_f)
 

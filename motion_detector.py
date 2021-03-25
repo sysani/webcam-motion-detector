@@ -4,9 +4,9 @@ from face_detection import detect_face
 
 first_frame = None
 status_list = [None]
+face_status = False
 motion_times = []
 face_times = []
-face_status = False
 motion_df = pandas.DataFrame(columns=["Start", "End"])
 face_df = pandas.DataFrame(columns=["Start", "End"])
 count = 0
@@ -42,6 +42,11 @@ while True:
     status_list.append(motion_status)
     status_list = status_list[-2:]
 
+    if status_list[-1]==1 and status_list[-2]==0:
+        motion_times.append(datetime.now())
+    if status_list[-1]==0 and status_list[-2]==1:
+        motion_times.append(datetime.now())
+
     #check if face is detected in motion
     if detect_face(frame):
         if face_status == False:
@@ -54,15 +59,6 @@ while True:
             face_times.append(datetime.now())
         face_status = False
 
-
-    if status_list[-1]==1 and status_list[-2]==0:
-        motion_times.append(datetime.now())
-    if status_list[-1]==0 and status_list[-2]==1:
-        motion_times.append(datetime.now())
-
-    cv2.imshow("Capturing", gray)
-    cv2.imshow("Delta", delta_frame)
-    cv2.imshow("Threshold", thresh_frame)
     cv2.imshow("Colour Frame", frame)
 
     key = cv2.waitKey(100)
@@ -72,8 +68,6 @@ while True:
         if face_status == True:
             face_times.append(datetime.now())
         break
-
-    print(face_times)
 
 for i in range(0,len(motion_times),2):
     motion_df = motion_df.append({"Start": motion_times[i], "End":motion_times[i+1]}, ignore_index=True)
