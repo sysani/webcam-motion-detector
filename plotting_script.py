@@ -10,9 +10,10 @@ if (len(motion_df) > 0):
     motion_df['Start_Str'] = motion_df['Start'].dt.strftime('%Y-%m-%d %H:%M:%S')
     motion_df['End_Str'] = motion_df['End'].dt.strftime('%Y-%m-%d %H:%M:%S')
     cds = ColumnDataSource(motion_df)
-    hover_motion = HoverTool(tooltips=[("Start", "@Start_Str"), ("End", "@End_Str")])
-    p.add_tools(hover_motion)
     q1 = p.quad(left='Start',right='End',bottom=0,top=1,color="yellow",source=cds)
+    hover_motion = HoverTool(renderers=[q1], tooltips=[("Start", "@Start_Str"), ("End", "@End_Str")])
+    p.add_tools(hover_motion)
+
 
 if (len(face_df) > 0):
     cds_f = ColumnDataSource(data=dict(
@@ -24,10 +25,11 @@ if (len(face_df) > 0):
         './imgs/1592171906394.jpg'
     ]
     ))
-    hover_face = HoverTool(tooltips=[("Start", "@Start_Str"), ("End", "@End_Str"),
+    q2 = p.quad(left='Start',right='End',bottom=1,top=2,color="green",source=cds_f)
+    hover_face = HoverTool(renderers=[q2], tooltips=[("Start", "@Start_Str"), ("End", "@End_Str"),
                                     ("Image", "<div><img src='@imgs', height=100, width=100></div>")])
     p.add_tools(hover_face)
-    q2 = p.quad(left='Start',right='End',bottom=1,top=2,color="green",source=cds_f)
+
 
 output_file("graph.html")
 show(p)
