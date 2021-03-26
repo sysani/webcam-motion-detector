@@ -1,6 +1,7 @@
 from motion_detector import motion_df, face_df
 from bokeh.plotting import show, figure, output_file
 from bokeh.models import HoverTool, ColumnDataSource
+import os
 
 p = figure(x_axis_type="datetime", height=200, width=500, title="Motion Detection Times")
 p.yaxis.minor_tick_line_color=None
@@ -17,19 +18,16 @@ if (len(motion_df) > 0):
 
 if (len(face_df) > 0):
     cds_f = ColumnDataSource(data=dict(
-    Start=face_df['Start'],
-    End=face_df['End'],
-    Start_Str=face_df['Start'].dt.strftime('%Y-%m-%d %H:%M:%S'),
-    End_Str=face_df['End'].dt.strftime('%Y-%m-%d %H:%M:%S'),
-    imgs= [
-        './imgs/1592171906394.jpg'
-    ]
+        Start=face_df['Start'],
+        End=face_df['End'],
+        Start_Str=face_df['Start'].dt.strftime('%Y-%m-%d %H:%M:%S'),
+        End_Str=face_df['End'].dt.strftime('%Y-%m-%d %H:%M:%S'),
+        imgs = ['./imgs/'+img for img in os.listdir('./imgs')]
     ))
     q2 = p.quad(left='Start',right='End',bottom=1,top=2,color="green",source=cds_f)
     hover_face = HoverTool(renderers=[q2], tooltips=[("Start", "@Start_Str"), ("End", "@End_Str"),
-                                    ("Image", "<div><img src='@imgs', height=100, width=100></div>")])
+                                    ("Image", "<div><img src='@imgs', height=250, width=250></div>")])
     p.add_tools(hover_face)
-
 
 output_file("graph.html")
 show(p)
